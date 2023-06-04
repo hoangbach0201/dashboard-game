@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Hoàng Bách's Snake Game</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="snake.js"></script>
+  <script src="game.js"></script>
+  <script type='text/javascript'>
+    window.onload = function () {
+      var game = new Game("canvas");
+      game.init();
+    }
+  </script>
+  <style>
+    .canvas-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="canvas-container">
+    <canvas id="canvas" tabindex="0" style="margin:0px; border: 1px solid"></canvas>
+  </div>
+</body>

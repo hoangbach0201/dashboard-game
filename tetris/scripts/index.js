@@ -176,7 +176,7 @@ const BRICK_LAYOUT = [
       [7, 1, 7],
     ],
   ],
-];
+]
 
 const KEY_CODES = {
   'LEFT': 'ArrowLeft',
@@ -213,9 +213,25 @@ class Board {
   drawBoard() {
     for (let row = 0; row < this.grid.length; row++) {
       for (let col = 0; col < this.grid[0].length; col++) {
-        this.drawCell(col, row, WHITE_COLOR_ID);
+        this.drawCell(col, row, this.grid[row][col]);
       }
     }
+  }
+
+  handleCompleteRows() {
+   const latestGrid = board.grid.filter((row) => { // row => []
+      return row.some(col => col === WHITE_COLOR_ID);
+    });
+
+    const newScore = ROWS - latestGrid.length; // => newScore = tong cong hang da hoan thanh
+    const newRows = Array.from({ length: newScore }, () => Array(COLS).fill(WHITE_COLOR_ID));
+
+    board.grid = [...newRows, ...latestGrid];
+    console.log({latestGrid});
+  }
+
+  handleScore(newScore) {
+   
   }
 }
 
@@ -249,14 +265,20 @@ class Brick {
   }
 
   moveLeft() {
-    if (!this.checkCollision(this.rowPos, this.colPos - 1)) {
+    if (
+      !this.checkCollision(
+        this.rowPos,
+        this.colPos - 1,
+        this.layout[this.activeIndex]
+      )
+    ) {
       this.clear();
       this.colPos--;
       this.draw();
     }
   }
   moveRight() {
-    if (!this.checkCollision(this.rowPos, this.colPos + 1)) {
+    if (!this.checkCollision(this.rowPos, this.colPos + 1, this.layout[this.activeIndex])) {
       this.clear();
       this.colPos++;
       this.draw();
@@ -264,16 +286,20 @@ class Brick {
   }
 
   moveDown() {
-    if (!this.checkCollision(this.rowPos + 1, this.colPos - 1)) {
+    if (!this.checkCollision(this.rowPos + 1, this.colPos, this.layout[this.activeIndex])) {
       this.clear();
       this.rowPos++;
       this.draw();
+
+      return;
     }
 
+    this.handleLanded();
+    generateNewBrick();
   }
 
   rotate() {
-    if (!this.checkCollision(this.rowPos, this.colPos)) {
+    if (!this.checkCollision(this.rowPos, this.colPos, this.layout[(this.activeIndex + 1) % 4])) {
       this.clear();
       this.activeIndex = (this.activeIndex + 1) % 4;
       /**
@@ -288,25 +314,55 @@ class Brick {
     }
   }
 
-  checkCollision(nextRow, nextCol) {
-    if (nextCol < 0) return true;
+  checkCollision(nextRow, nextCol, nextLayout) {
+    // if (nextCol < 0) return true;
 
-    for (let row = 0; row < this.layout[this.activeIndex].length; row++) {
-      for (let col = 0; col < this.layout[this.activeIndex][0].length; col++) {
-        if (this.layout[this.activeIndex][row][col] !== WHITE_COLOR_ID) {
-          if ((col + nextCol >= COLS) || (row + nextRow >= ROWS)) return true;
+    for (let row = 0; row < nextLayout.length; row++) {
+      for (let col = 0; col < nextLayout[0].length; col++) {
+        if (nextLayout[row][col] !== WHITE_COLOR_ID) {
+          if (
+            col + nextCol < 0 ||
+            col + nextCol >= COLS ||
+            row + nextRow >= ROWS ||
+            board.grid[row+nextRow][col+nextCol] !== WHITE_COLOR_ID
+          )
+            return true;
         }
       }
     }
+
     return false;
+  }
+
+  handleLanded() {
+    for (let row = 0; row < this.layout[this.activeIndex].length; row++) {
+      for (let col = 0; col < this.layout[this.activeIndex][0].length; col++) {
+       if (this.layout[this.activeIndex][row][col] !== WHITE_COLOR_ID) {
+        board.grid[row + this.rowPos][col +this.colPos] = this.id;
+       }
+      }
+    }
+
+
+    board.handleCompleteRows();
+    board.drawBoard();
   }
 }
 
+function generateNewBrick() {
+  brick = new Brick(Math.floor(Math.random() * 10) % BRICK_LAYOUT.length); // tao ra 1 id bat ki nam tu 0 -> 6
+}
+
+
 var board = new Board(ctx);
 board.drawBoard();
-brick = new Brick(0);
+generateNewBrick();
 brick.draw();
 brick.rotate();
+
+ setInterval(() => {
+   brick.moveDown();
+ }, 1000);
 
 document.addEventListener('keydown', (e) => {
   console.log({ e })

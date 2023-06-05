@@ -199,6 +199,9 @@ class Board {
     this.grid = this.generateWhiteBoard();
     this.score = 0;
     this.gameOver = false
+    this.isPlaying = false;
+
+    this.clearAudio = new Audio('..//sounds/clear.wav');
   }
 
   reset() {
@@ -238,6 +241,8 @@ class Board {
     if (newScore) {
     board.grid = [...newRows, ...latestGrid];
     this.handleScore(newScore * 10);
+     
+    this.clearAudio.play();
     console.log({latestGrid});
     }
   }
@@ -249,6 +254,7 @@ class Board {
 
   handleGameOver() {
     this.gameOver = true;
+    this.isPlaying = false;
     alert('GAME OVER!!!');
   }
 }
@@ -391,7 +397,10 @@ generateNewBrick();
 
 document.getElementById('play').addEventListener('click', () => {
  board.reset();
-  generateNewBrick();
+
+ board.isPlaying = true;
+  
+ generateNewBrick();
 
   const refresh = setInterval(() => {
     if (!board.gameOver) {
@@ -405,7 +414,7 @@ document.getElementById('play').addEventListener('click', () => {
  
 
 document.addEventListener('keydown', (e) => {
-  if (!board.gameOver) {
+  if (!board.gameOver && board.isPlaying) {
     console.log({ e })
     switch (e.code) {
       case KEY_CODES.LEFT:

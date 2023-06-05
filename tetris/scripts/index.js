@@ -197,6 +197,15 @@ class Board {
   constructor(ctx) {
     this.ctx = ctx;
     this.grid = this.generateWhiteBoard();
+    this.score = 0;
+    this.gameOver = false
+  }
+
+  reset() {
+    this.score = 0;
+    this.grid = this.generateWhiteBoard(); 
+    this.gameOver = false;
+    this.drawBoard();
   }
 
   generateWhiteBoard() {
@@ -226,12 +235,21 @@ class Board {
     const newScore = ROWS - latestGrid.length; // => newScore = tong cong hang da hoan thanh
     const newRows = Array.from({ length: newScore }, () => Array(COLS).fill(WHITE_COLOR_ID));
 
+    if (newScore) {
     board.grid = [...newRows, ...latestGrid];
+    this.handleScore(newScore * 10);
     console.log({latestGrid});
+    }
   }
 
   handleScore(newScore) {
-   
+    this.score+= newScore;
+    document.getElementById('score').innerHTML = this.score;
+  }
+
+  handleGameOver() {
+    this.gameOver = true;
+    alert('GAME OVER!!!');
   }
 }
 
@@ -241,8 +259,10 @@ class Brick {
     this.layout = BRICK_LAYOUT[id]
     this.activeIndex = 0;
     this.colPos = 3;
-    this.rowPos = 3;
+    this.rowPos = -2;
+    
   }
+ 
 
   draw() {
     for (let row = 0; row < this.layout[this.activeIndex].length; row++) {
@@ -294,8 +314,14 @@ class Brick {
       return;
     }
 
+
     this.handleLanded();
-    generateNewBrick();
+
+    if (!board.gameOver) {
+      generateNewBrick();
+
+    }
+    
   }
 
   rotate() {
@@ -319,7 +345,7 @@ class Brick {
 
     for (let row = 0; row < nextLayout.length; row++) {
       for (let col = 0; col < nextLayout[0].length; col++) {
-        if (nextLayout[row][col] !== WHITE_COLOR_ID) {
+        if (nextLayout[row][col] !== WHITE_COLOR_ID && nextRow >= 0) {
           if (
             col + nextCol < 0 ||
             col + nextCol >= COLS ||
@@ -334,7 +360,12 @@ class Brick {
     return false;
   }
 
-  handleLanded() {
+  handleLanded() {  
+  if (this.rowPos <= 0) {
+    board.handleGameOver();
+    return;
+  }
+
     for (let row = 0; row < this.layout[this.activeIndex].length; row++) {
       for (let col = 0; col < this.layout[this.activeIndex][0].length; col++) {
        if (this.layout[this.activeIndex][row][col] !== WHITE_COLOR_ID) {
@@ -354,34 +385,45 @@ function generateNewBrick() {
 }
 
 
-var board = new Board(ctx);
+board = new Board(ctx);
 board.drawBoard();
 generateNewBrick();
-brick.draw();
-brick.rotate();
 
- setInterval(() => {
-   brick.moveDown();
- }, 1000);
+document.getElementById('play').addEventListener('click', () => {
+ board.reset();
+  generateNewBrick();
+
+  const refresh = setInterval(() => {
+    if (!board.gameOver) {
+      brick.moveDown();
+    } else{
+      clearInterval(refresh);
+    }  
+   }, 1000);
+})
+
+ 
 
 document.addEventListener('keydown', (e) => {
-  console.log({ e })
-  switch (e.code) {
-    case KEY_CODES.LEFT:
-      brick.moveLeft();
-      break;
-    case KEY_CODES.RIGHT:
-      brick.moveRight();
-      break;
-    case KEY_CODES.DOWN:
-      brick.moveDown();
-      break;
-    case KEY_CODES.UP:
-      brick.rotate();
-      break;
-    default:
-      break;
-  }
+  if (!board.gameOver) {
+    console.log({ e })
+    switch (e.code) {
+      case KEY_CODES.LEFT:
+        brick.moveLeft();
+        break;
+      case KEY_CODES.RIGHT:
+        brick.moveRight();
+        break;
+      case KEY_CODES.DOWN:
+        brick.moveDown();
+        break;
+      case KEY_CODES.UP:
+        brick.rotate();
+        break;
+      default:
+        break; 
+  } 
+}
 });
 // brick.moveLeft();
 // brick.moveDown();
